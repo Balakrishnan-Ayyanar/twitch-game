@@ -1,38 +1,44 @@
-# Twitch operations and boundaries
+# Optional read-only Twitch setup
 
-**Verified live milestone — 2026-11-02 14:31:30 UTC:** coordinator observed user-owned **PID 2191**, connected with **1 subscription acknowledgement, 2 validated notifications and 1 accepted vote**. In mission 1 / round 1, a real `!supply` first produced `not_running`, then a fresh command was accepted. Exactly one supply resolution applied **+22 battery / −6 oxygen** and recalculated the route; rounds 2 and 3 defaulted north without votes. The mission **won at 25.0s**, carrying the crew, with **12 battery / 34 oxygen**. [Curated sanitized evidence](evidence/live-vote-verified.json) retains this result, but **not the exact Round 1 route lengths or intermediate resource snapshots**. Earlier simulation route 9→11 is not live evidence. Preserve the running server and completed mission; no reset/restart is needed for this documentation update.
-## Foreground operation
+Default `python3 server.py` is simulated and reads no private storage. Live operation is an operator-owned local confidential app targeting **balakrishnanayyanar**, not a hosted service or distributed shared-secret application.
 
-Preserve current PID2191 and its completed mission. For a later fresh startup only, manually use your own Terminal in this workspace:
+## Private configuration
+
+Use a confidential **Game Integration** Twitch application with exact registered redirect **http://localhost:8000/auth/twitch/callback**. The owner must meet Twitch registration requirements (verified email and 2FA). Use the existing owner app where applicable; never publish or share its secret.
+
+If the directory already exists, preserve it and its contents; do not overwrite existing credentials. For new storage, use the empty public template, then enter the owner's app values privately in a local editor:
 
 ```sh
+mkdir -m 700 .twitch-local
+cp -n twitch-config.example.json .twitch-local/credentials.json
+chmod 600 .twitch-local/credentials.json
+```
+
+Supported UTF-8 JSON has only `schema_version` (integer 1), `client_id` and `client_secret`. Client ID is ASCII alphanumeric, 1–256 characters; secret is visible ASCII without whitespace, 1–1024 characters. Maximum 4096 bytes. The empty template does not pass validation until filled. Never paste values into chat, logs, browser storage or source.
+
+Directory must be current-owner with mode 0700; file mode 0600 (or 0400), regular and single-linked. Symlinks, extended ACLs, insecure modes/ownership and unsupported safety checks fail closed. No env discovery, browser upload or credential fallback. `.twitch-local/` is ignored.
+
+```sh
+.venv/bin/python server.py --check-twitch-config
 .venv/bin/python server.py --enable-twitch --port 8000
 ```
 
-Keep it open; visit **http://localhost:8000/**. No Terminal automation, launchctl/persistence job, TCC workaround, broader bind or firewall change is installed or permitted by this work. The prior launchctl attempt was denied Documents/venv access and removed. If startup fails, report the error without private values; do not bypass restrictions. This coding turn launched nothing.
+The validator exits without binding/network. `--load-twitch-config` is storage-only and leaves OAuth disabled. Modes are mutually exclusive. Only explicit `--enable-twitch` enables the provider factories; startup itself does not authorize or connect. Keep the server foreground. Binding stays 127.0.0.1; live port is exactly 8000. Open **http://localhost:8000/** consistently, not the 127 alias.
 
-Use the operator panel in order: status → read-only authorization → clean callback return → chat connect → verified subscription → actual ready-state command receipt → deploy → **new** command in the seven-second round → accepted receipt/tally → round impact. A ready-state command proves delivery but casts no vote. Do not conflate the three evidence counters. Current process counters reset on exit, remain across restart/reconnect, and are not historic submission evidence on their own. See README for exact mission behavior.
+## Authorization and chat
 
-Only `user:read:chat` is requested/accepted. No chat posting, moderation, email or broadcast permissions. WebSocket subscriptions require a USER token; the app-token bot permissions path is not used.
+In the operator panel, intentionally authorize the expected account with **only `user:read:chat`**, return through the clean callback, then Connect chat. No posting, moderation, email or broadcast scope. WebSocket EventSub uses a USER token; app-token bot permissions are not used.
 
-## Credentials, OAuth and local routes
+A verified subscription is not message delivery. A ready-state command can produce a sanitized `not_running` receipt but no vote. After deployment, a fresh command during the seven-second round can produce an accepted receipt/tally and a later round consequence. Simulated voting is disabled after live activation. Diagnostics expose safe action/outcome/counts only, not raw messages, provider IDs or tokens.
 
-- Existing operator-owned app: **Chat Mission Control**, **Confidential / Game Integration**, exact redirect **http://localhost:8000/auth/twitch/callback**. Do not create a duplicate. Private credentials were provisioned by the user; do not open/reveal them through Codex, logs, chat or footage.
-- Storage is only `.twitch-local/credentials.json`; JSON version/client ID/secret and conservative owner-only validation are documented in README. No environment discovery. Default startup reads nothing; `--check-twitch-config` and `--load-twitch-config` are storage-only. Only `--enable-twitch` wires enabled OAuth HTTP and approved socket/Helix factories; it does not itself connect or grant. Another live port is rejected before storage reads.
-- Binding stays **127.0.0.1**. Live Host/Origin is exactly **localhost:8000**; default mode also permits the 127 alias at its listening port. No wildcard CORS, DNS-rebinding hostname, duplicate Host or foreign Origin. Alias cookies are not shared.
-- `GET /api/twitch/status` creates/reads a bounded 30-minute local session. `cmc_session` is random, host-only, HttpOnly, SameSite=Lax. The HTTP loopback cookie is not a public-hosting design. Status returns sanitized fields and a session CSRF token, never provider credentials/tokens.
-- Only intentional same-origin JSON `POST /auth/twitch/start` with session/CSRF initiates confidential authorization-code flow. Five-minute single-use state binds session, origin, configuration, exact redirect and scope. Replacement/expiry/replay/provider denial are handled; no PKCE support is assumed.
-- Callback identity validation checks exact client/account, numeric user ID, expiry and exactly `user:read:chat`. Provider errors are never reflected; query logging is suppressed. HTML callbacks 303 to a fixed clean local URL. JSON clients get sanitized status/local links. UI allowlists the exact official authorization URL/fields, and keeps only CSRF/status in closure memory.
-- `POST /api/twitch/connect`, `/api/twitch/disconnect`, `/auth/twitch/disconnect` use the same session/Origin/CSRF guards. Only the owning session controls an active worker. Connect and authorization are separate. Clear-local also stops the worker, removes in-memory tokens and pending attempts; it does not remotely revoke the grant. Automatic refresh and persisted tokens are not implemented.
+## Security boundaries
 
-A publicly distributed application needs a separate **public device-code, no shared secret, no callback** design. The current confidential flow is operator-owned local software, not a distributable shared-secret scheme.
+- Exact Host/Origin checks, no wildcard CORS, foreign origins or DNS-rebinding hostnames. Live origin is localhost:8000; alias cookies are not shared.
+- Host-only HttpOnly SameSite=Lax session cookie, bounded 30-minute session. Intentional same-origin POSTs require session CSRF for auth start/connect/disconnect.
+- Confidential authorization-code flow; single-use five-minute state bound to session/configuration/redirect/scope. No PKCE support is assumed. Callback validates client/account/numeric user ID/expiry/exact scope; queries and provider error bodies are not logged or reflected.
+- Tokens stay backend memory only. Clear-local authorization stops the worker and removes tokens; it does not remotely revoke the grant. Automatic refresh/persistent tokens are not implemented; restart requires reauthorization.
+- TLS/hostname-verified `wss://eventsub.wss.twitch.tv/ws`, no token in socket headers/query. Welcome plus matching HTTP 202 channel.chat.message v1 subscription acknowledgement precede connected status. Helix verifies the expected channel.
+- Keepalive watchdog, official reconnect handover and capped cancelable retry handle transport loss. Authorization expiry/revocation stops retries. Exact reconnect URL allowlist rejects other hosts/protocols/paths/query fields.
+- Strict RFC3339 timestamp parsing supports nanoseconds on Python 3.9, with full fractional freshness precision. Envelope/channel/user shape, bounded dedup and original ingress mission/round token are validated under the game lock. No browser notification-ingestion endpoint.
 
-## Transport and evidence safety
-
-`eventsub.py` uses approved **websocket-client 1.9.0**, coordinator-installed from official PyPI in Python **3.9.6** `.venv`. Pins/hash are in requirements files. No new dependency/install. Stdlib handles OAuth/Helix HTTP. The worker validates the channel through Helix, opens TLS/hostname-verified `wss://eventsub.wss.twitch.tv/ws` without bearer headers/query, and requires welcome + matching HTTP 202 `channel.chat.message` v1 acknowledgement before connected status.
-
-Protocol ping/pong is library-owned. A welcome deadline and EventSub keepalive watchdog detect loss. Official reconnect retains the old socket until a candidate welcome and transfers subscriptions without duplicate POST. Reconnect URLs accept only exact host/path/protocol, default/443 port, one reconnect parameter and no credentials/fragment/other query fields. Unexpected loss opens a fresh session and re-subscribes, with capped cancelable backoff. Authorization loss/expiry/revocation stops; UI directs reauthorization, prevents restart while stopping, and exposes only safe retry counters.
-
-Notifications are validated for type/version/channel/subscription user, stable chatter ID/text shape, freshness and bounded dedup before voting. Tick/capture/dispatch uses the game lock and original ingress round token. Dedup survives mission restart/reconnect. The latest 12 sanitized receipts expose only action/outcome/local mission/round/age; no raw text, provider IDs or URLs. Only validated notifications increment delivery; only successfully cast votes increment acceptance. A duplicate may count as another delivery, never another accepted vote. This is runtime observability, not independent attestation or a claim mocked fixtures were real.
-
-All credential/provider/socket checks and no-message-write behavior remain intact. No browser notification ingestion endpoint exists. Prior implementation tests used synthetic fixtures only; this docs/package turn reran none. Coordinator verified actual notification delivery, accepted voting and the completed mission in the curated evidence above. Desktop screenshots verified layout/counters/preflight; full responsive coverage and actual live disconnect recovery remain unverified. No footage was recorded, and no upload/publication/submission occurred.
+The optional transport uses pinned **websocket-client 1.9.0** (`requirements.txt`, hash-locked `requirements.lock`); OAuth/Helix HTTP uses stdlib. No Node dependency is needed. [README](README.md) contains architecture, demo and curated verification. Full responsive/live disconnect recovery remain unverified; mocked tests are not production-load proof. A public distributed app would require a separately designed public device-code/no-shared-secret flow.

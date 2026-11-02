@@ -1,6 +1,0 @@
-{
-  "reviewed": false,
-  "gameChat": {"file":"media/game-chat.mp4","reviewed":false,"genuineLiveChat":false,"durationSeconds":0},
-  "codex": {"file":"media/codex.mp4","reviewed":false,"sameOriginalSession":false,"laterFollowup":false,"durationSeconds":0},
-  "starts": {"hook":0,"explain":0,"vote":0,"rescue":0,"codex":0,"recap":0}
-}

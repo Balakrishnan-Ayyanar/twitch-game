@@ -1,82 +1,67 @@
 # Chat Mission Control
 
-One rover, one floodplain, three chat choices. A Python-authoritative rescue/delivery game with a responsive vanilla canvas map, visible routing, seven-second votes and explainable community impact. The default mode is clearly labeled simulated. Optional Twitch integration reads chat only (`user:read:chat`), never posts, moderates or controls a broadcast.
+A local 2D rover rescue game where chat chooses the way home. Python owns mission state, breadth-first route planning, seven-second voting rounds and win/loss outcomes; vanilla HTML/CSS/JavaScript canvas shows the rover and its route.
 
-**Verified live milestone — 2026-11-02 14:31:30 UTC:** coordinator observed user-owned **PID 2191**, connected with **1 subscription acknowledgement, 2 validated notifications and 1 accepted vote**. In mission 1 / round 1, a real `!supply` first produced `not_running`, then a fresh command was accepted. Exactly one supply resolution applied **+22 battery / −6 oxygen** and recalculated the route; rounds 2 and 3 defaulted north without votes. The mission **won at 25.0s**, carrying the crew, with **12 battery / 34 oxygen**. [Curated sanitized evidence](evidence/live-vote-verified.json) retains this result, but **not the exact Round 1 route lengths or intermediate resource snapshots**. Earlier simulation route 9→11 is not live evidence. Preserve the running server and completed mission; no reset/restart is needed for this documentation update.
-## Start it yourself in a foreground Terminal
+Watch the [verified demo](https://youtu.be/bBtE758nlgI). It includes genuine game/chat footage and an explicitly edited later Codex follow-up, with privacy crops and labeled stills.
 
-The current operator server/finished mission must remain untouched. For a later fresh operator startup only, manually open your own Terminal and keep that process running throughout play/capture:
+## Run locally
 
-```sh
-cd /Users/balakrishnanayyanar/Documents/Codex/2026-10-30/task
-.venv/bin/python server.py --enable-twitch --port 8000
-```
-
-Open **http://localhost:8000/**. Binding stays **127.0.0.1**; live mode requires the exact localhost:8000 browser origin. This is a normal foreground process, with no persistence service. Close it with Ctrl+C when finished. Do not close the Terminal mid-demo. On a permission error, stop and report it; do not bypass TCC or change firewall/network exposure.
-
-For a **clean reviewer**, extract the source ZIP into a new folder, use Python 3.9+ and run `python3 server.py`; open **http://localhost:8000/**. Simulation uses only stdlib, reads no credentials and makes no provider calls. Use a separate machine or wait until port 8000 is free; do not replace the operator's running process. All canvas/static assets are included; no asset downloads are required.
-
-Optional dependency setup for a separately approved live installation (not needed for simulation):
+Python **3.9+** is required. From a checkout:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements.lock
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python server.py
 ```
 
-This installs only pinned **websocket-client 1.9.0** using the coordinator-verified official PyPI wheel hash. It does not provision credentials or authorize Twitch. The existing operator `.venv` needs no installation. Executor-owned servers were not durable; denied launchctl/Terminal automation will not be retried. No persistence service or permission bypass is used.
+Open **http://localhost:8000/**. The server binds **127.0.0.1**. Default mode is clearly labeled **simulated chat** and needs only Python stdlib; installing the pinned `websocket-client` dependency above prepares optional Twitch support. For hash-verified installation use `.venv/bin/python -m pip install --require-hashes -r requirements.lock`. No Node build or cloud service is required.
 
-## Live preflight and demo
+Deploy the rover, then vote north, scan or supply. Rounds last seven seconds; one vote per viewer per round, most votes wins, ties choose north → scan → supply, and no votes defaults north. North opens its crossing; scan opens central and trades 4 battery for 8 seconds of oxygen; supply opens south and adds 22 battery (cap 100) for 6 seconds of oxygen. Rescue the crew and reach shelter before resources run out. Restart prepares a fresh mission. The UI explains resource and route consequences.
 
-1. **Retry status** if needed. Authorize **only user:read:chat**, using `balakrishnanayyanar`. OAuth readiness/authorization and chat connection are displayed separately. The callback returns to a clean local URL; never record the login, callback/network details or private storage.
-2. Click **Connect chat** and wait for verified subscription status. An acknowledgement proves a subscription, not message delivery. No connection happens merely from starting the process or loading the page.
-3. Have a real viewer send `!supply` in the actual channel while the mission is ready. The validated-events counter and sanitized receipt should increase, but accepted votes should stay zero with “mission not running.” This checks delivery without spending mission time. **Coordinator verified this ready-state receipt, followed by a fresh accepted live vote; footage is still pending.**
-4. Confirm viewers are ready, then **Deploy rover**. The first seven-second round starts immediately. Ask for a **fresh** `!supply` during the round. An accepted receipt, incremented tally and accepted-live-votes counter establish vote processing; subscription alone does not. Live-mode UI waits for chat connection before enabling deployment; core mission rules are unchanged.
-5. At round close, **Community impact** explains the winner/default/tie, actual resource delta (including battery cap) and route length before/after. Rescue the northeast crew, then reach the southeast shelter. After real subscription activation, simulated viewer buttons remain disabled, including across reconnect/mission restart.
+## Architecture
 
-Diagnostics show only safe action/outcome/mission/round/counts. No raw provider text, names, user/message IDs, tokens or URLs are exposed. Counters are **current-process only**, retained across mission restart/reconnect, cleared on server exit. Duplicate delivery can increase the validated-event count, but never accepted votes.
+```mermaid
+flowchart LR
+  T[Twitch chat] --> E[Optional EventSub WebSocket transport]
+  E --> V[Validate envelope, timestamp, IDs and dedup]
+  V --> G[Vote engine and Python state / BFS]
+  B[Browser controls] -->|Same-origin HTTP POST| G
+  B -->|HTTP polling| H[Local Python HTTP API]
+  G --> H
+  H -->|JSON snapshots| C[Canvas UI]
+  B -->|Intentional authorization| O[Official Twitch OAuth]
+  O -->|Loopback callback| A[Backend OAuth validation]
+  A -->|In-memory user token| E
+```
 
-## Rules and recovery
+The browser polls HTTP; it has no Twitch socket or token. Simulated votes and validated EventSub messages enter the backend through separate boundaries. Provider/socket interfaces are injectable for offline tests.
 
-The rover moves automatically every 1.25 seconds, using 2.6 battery per tile. Start with 42 battery and 65 seconds of oxygen. Choose supply early; ignoring supplies loses to battery depletion. Deliver with resources remaining to win. Restart returns to 42/65, round 1, ready.
+## Optional read-only Twitch
 
-| Command | Consequence at round close |
-| --- | --- |
-| `!north` | Open north crossing; no resource cost |
-| `!scan` | Open central crossing; +8s oxygen, −4 battery |
-| `!supply` | Open south crossing; +22 battery capped at 100, −6s oxygen |
-
-One immutable vote per normalized viewer ID per round. Most votes wins; ties use north → scan → supply order; no votes defaults north. Other crossings close, except underneath the rover until it leaves. Seven-second rounds, paths and resources remain backend-owned.
-
-When the backend is unavailable, all gameplay/auth/chat actions are disabled and timers are marked stale. Start the foreground process and retry status; the browser never restarts it or auto-authorizes/connects. If a server is still running, mission time is **not paused** by browser/network loss. Polls have deadlines and bounded recovery delays.
-
-Transport loss retries at 1/2/4/8/16 seconds, at most five per intentional start. Recovery status shows the retry. Wait for stopping workers to finish before reconnecting. For expired/rejected authorization, **Clear local authorization**, authorize again, then reconnect. Disconnect keeps local authorization; clearing it deletes local tokens without remote revocation. Restarting the server always requires fresh local authorization. No persistent tokens are stored.
-
-## Private configuration
-
-The registered app is **Chat Mission Control**, **Confidential / Game Integration**, with redirect **http://localhost:8000/auth/twitch/callback**. The user privately provisioned credentials and the coordinator previously validated storage; **this coding turn never read existing credentials or env/secret files**. Do not regenerate/overwrite them.
-
-The sole supported storage path is `.twitch-local/credentials.json`, excluded from Git. Strict UTF-8 JSON accepts only `schema_version` integer 1, `client_id` (ASCII alphanumeric, 1–256), `client_secret` (visible ASCII without whitespace, 1–1024), at most 4096 bytes. Empty public template: `twitch-config.example.json`. Private directory must be current-owner 0700; file 0600 or 0400, regular and single-linked. Insecure ownership/modes, extended ACLs, symlinks and unsupported safety checks fail closed. No env fallback or browser upload.
-
-`--check-twitch-config` validates and exits without binding or network; `--load-twitch-config` loads **disabled** OAuth memory; `--enable-twitch` is the separate explicit live capability flag. Modes are mutually exclusive. Default import/startup reads no secrets. See [TWITCH_SETUP.md](TWITCH_SETUP.md) for protocol/security boundaries.
-
-## Verify and prepare submission
+Live mode targets **balakrishnanayyanar** and requires operator-owned confidential-app credentials. Follow [TWITCH_SETUP.md](TWITCH_SETUP.md): private `.twitch-local/credentials.json`, directory mode 0700 and file mode 0600, using `twitch-config.example.json` as the empty template. Never commit credentials.
 
 ```sh
-PYTHONPATH=tests .venv/bin/python -m unittest test_game test_twitch_adapter test_oauth test_eventsub test_local_config test_live_activation test_twitch_ui test_demo_readiness test_http.HandlerSmokeTests -v
-PYTHONPYCACHEPREFIX=/tmp/chat-mission-control-pycache .venv/bin/python -m py_compile game.py server.py oauth.py eventsub.py twitch_adapter.py local_config.py tools/check_source.py
+.venv/bin/python server.py --check-twitch-config
+.venv/bin/python server.py --enable-twitch --port 8000
+```
+
+Use exactly **http://localhost:8000/**; registered callback is **http://localhost:8000/auth/twitch/callback**. Intentionally authorize only **`user:read:chat`**, then Connect chat. Subscription acknowledgement is distinct from notification delivery and an accepted vote. Simulated voting is disabled after verified live activation. No posting, moderation or broadcast control. Tokens remain backend memory only; server restart requires reauthorization. Live mode is off by default.
+
+## Validation and limits
+
+```sh
+.venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python tools/check_source.py
 ```
 
-Latest coordinator verification: **112 Python tests passed, no skips, plus 8 Node tests; source credential scans found zero findings**. Earlier100-full/98-socket-free and95/93 results are historical; compilation previously passed. No checks were rerun for this docs-only correction. Tests use fake provider/socket/OAuth data and temporary credentials. Native JavaScriptCore UI tests run on macOS and skip elsewhere; socket tests require loopback permission. Full reviewer command: `python3 -m unittest discover -s tests -v`.
+Tests cover paths/outcomes/restart, voting/ties, OAuth/session/origin guards, timestamp freshness/dedup, mocked EventSub lifecycle and browser logic. Provider tests use fakes; loopback HTTP tests need local socket permission. Native JavaScriptCore UI tests run on macOS and skip elsewhere. The fixed public-source scanner is a heuristic, not a comprehensive secret audit.
 
-Coordinator desktop screenshots verified current layout/counters/preflight after unlock. Full responsive coverage and actual live disconnect recovery are **not verified**. The Python 3.9 nanosecond timestamp fix is now supported by the subsequent real delivery/vote evidence, not merely subscription status. Workspace-only `evidence/VALIDATION.md` keeps earlier results separate; raw test logs/history are intentionally excluded from the reviewer ZIP. The packaged curated JSON and readiness summary report the verified evidence.
+[Curated live evidence](evidence/live-vote-verified.json) verifies one accepted live supply vote, one supply resolution (+22 battery / −6 oxygen) with route recalculation and rescue at 25.0 seconds, carrying the crew, ending with 12 battery / 34 oxygen. Exact intermediate route lengths were not retained. This is a verified single-mission demonstration, not production-load evidence.
 
-[Readiness](submission/READINESS.md), [planned 2:50 demo](submission/DEMO_SCRIPT.md), [recording workflow](submission/RECORDING.md) and [unsubmitted draft](submission/DRAFT.md) describe remaining work. **Source published:** [https://github.com/Balakrishnan-Ayyanar/twitch-game](https://github.com/Balakrishnan-Ayyanar/twitch-game), initial source publication commit `56a11bc12c2257076341f7266f22d838634293c5`, coordinator-verified against the reviewed44-file source tree. Publication used the existing GitHub connector after CLI authentication was unavailable; no force, private media, credentials, visibility changes or new SSH trust. Genuine game/chat and same-session Codex clips remain missing. Completed local `video/out/draft.mp4`: **170.0seconds,1920×1080,video+audio tracks,11,223,210bytes**; SHA256 `046cbe175468973aa163987795c7d88d77be066671fc50fdbf9e9df4c5116596`. It is a narrated **WATERMARKED DRAFT with missing-footage cards**, not submission-ready or recorded gameplay. Genuine clips remain missing. Demo URL remains pending; public or unlisted YouTube is allowed, but no YouTube/Devpost upload/submission occurred or is authorized.
+Keep the foreground server alive. A phone cannot reach this computer's loopback address; this is not a hosted/mobile deployment. Full responsive coverage and actual live disconnect recovery are unverified. Reconnect/expiry failure paths have mocked coverage. Closing the backend loses in-memory authorization; browser loss does not pause a running mission.
 
-Coordinator-supplied working deadline: **November 2, 2026, 22:00 UTC** (**November 3, 06:00 Malaysia**). Parent verified the [official rules](https://twitchcon-codex.devpost.com/rules): Nov2 14:00 PST =22:00 UTC; the resources FAQ21:00 UTC conflicts. See submission/READINESS.md for equal criteria, required English/source/Codex proof, sharing approvals and deadline freeze. This update did not browse.
+## Built with Codex
 
-## Local video source — draft only
+Built and refined in the original persistent session **01a18a9f-83b7-7dc2-9144-78711c379fd4**, requested **gpt-6.1-sol / medium**. Codex implemented the authoritative game, canvas UI, guarded OAuth/EventSub integration and deterministic tests, then fixed Python 3.9 handling of Twitch nanosecond timestamps while retaining exact freshness limits. The demo's genuine later follow-up shows the same session's status, 12 relevant passing tests and the timestamp explanation; it is not recreated historical build footage.
 
-[video/README.md](video/README.md) describes the1920×1080,30fps,170s Remotion demo with exact4.0.540 Remotion/CLI and19.3.1 React pins. Official temporary Node runtime and pinned npm dependencies are installed. Coordinator generated the approved314-word/2084-character narration using an offered premade voice and eleven_multilingual_v2: **139.363265seconds,2,230,273bytes**, ignored local `video/public/media/narration.mp3`. Immediate account character_count was71550 before and after; counters may lag, so this is **not a zero-charge claim**. The key was never printed/stored. The watermarked Draft render completed successfully; Final still requires both reviewed genuine clips.
-
-Coordinator rebuilt SourceZIP-current with44files; **this docs update makes it stale again**. Coordinator rebuilds after the final documentation commit. [STAGING.md](submission/STAGING.md) retains the source checklist; no git/server/provider operations occurred in this docs-only turn. No YouTube/Devpost upload/submission.
+This repository contains the playable runtime, tests, setup and sanitized evidence. Local video production, submission drafts and workspace notes are excluded; no submission status is implied.

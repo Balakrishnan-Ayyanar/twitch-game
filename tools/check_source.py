@@ -12,7 +12,7 @@ SOURCES = (
     'game.py','server.py','oauth.py','eventsub.py','twitch_adapter.py','local_config.py',
     'static/index.html','static/style.css','static/app.js','static/twitch-ui.js',
     'twitch-config.example.json','requirements.txt','requirements.lock',
-    'README.md','TWITCH_SETUP.md','submission/READINESS.md','submission/DEMO_SCRIPT.md','submission/DRAFT.md',
+    'README.md','TWITCH_SETUP.md',
 )
 RULES = (
     ('private-key',re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----')),

@@ -35,3 +35,13 @@ raw-captures/
 # Local package artifacts; coordinator rebuilds after reviewed video lockfile.
 submission/*.zip
 submission/*.zip.sha256
+
+# Local production/submission workspace stays on disk, outside the runtime repo.
+/.local-archive/
+/video/
+/submission/
+/tools/elevenlabs_narration.py
+/tests/test_narration.py
+/SESSION_HANDOFF.md
+/evidence/*
+!/evidence/live-vote-verified.json
