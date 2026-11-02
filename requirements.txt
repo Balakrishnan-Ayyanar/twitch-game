@@ -1,0 +1,2 @@
+# Approved dependency already installed by coordinator; no installation by this build.
+websocket-client==1.9.0

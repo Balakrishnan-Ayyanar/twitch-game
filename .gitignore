@@ -1,0 +1,37 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*
+*secrets*
+*.token
+.venv/
+venv/
+# Local CLI streams can contain private prompts/paths; review before sharing.
+evidence/*.jsonl
+evidence/*stderr*.log
+evidence/*session*.json
+
+# Fixed owner-only backend credential location; never commit contents.
+.twitch-local/
+
+# Demo dependencies and generated/private media are never source.
+node_modules/
+video/public/media/
+video/out/
+video/reviewed-props.json
+media/
+out/
+raw-captures/
+*.mov
+*.mp4
+*.mp3
+*.wav
+*.webm
+# Local package artifacts; coordinator rebuilds after reviewed video lockfile.
+submission/*.zip
+submission/*.zip.sha256

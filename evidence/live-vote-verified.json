@@ -1,0 +1,62 @@
+{
+  "checked_at_utc": "2026-11-02T14:31:30.671229+00:00",
+  "evidence_type": "actual_live_twitch_vote_and_completed_mission",
+  "status": "won",
+  "round": 4,
+  "elapsed": 25.0,
+  "battery": 12.0,
+  "oxygen": 34.0,
+  "carrying": true,
+  "connected": true,
+  "transport_status": "connected",
+  "subscription_acks": 1,
+  "validated_notifications": 2,
+  "accepted_votes": 1,
+  "last_decision": {
+    "round": 3,
+    "action": "north",
+    "counts": {
+      "north": 0,
+      "scan": 0,
+      "supply": 0
+    },
+    "reason": "no_votes",
+    "battery_delta": 0.0,
+    "oxygen_delta": 0.0,
+    "route_before": 4,
+    "route_after": 4,
+    "bridge": 2,
+    "effect": "North bridge opened; other crossings closed."
+  },
+  "receipts": [
+    {
+      "mission": 1,
+      "round": 1,
+      "action": "supply",
+      "outcome": "not_running",
+      "age_seconds": 251.5
+    },
+    {
+      "mission": 1,
+      "round": 1,
+      "action": "supply",
+      "outcome": "accepted",
+      "age_seconds": 90.1
+    }
+  ],
+  "round_resolution_events": [
+    {
+      "round": "Round 1",
+      "effect": "South supply drop: +22 battery (cap 100), \u22126s oxygen. Route recalculated."
+    },
+    {
+      "round": "Round 2",
+      "effect": "North bridge opened; other crossings closed. Route recalculated."
+    },
+    {
+      "round": "Round 3",
+      "effect": "North bridge opened; other crossings closed. Route recalculated."
+    }
+  ],
+  "limits": "Round1 exact route-before/after and intermediate resource snapshot were not retained; latest decision is Round3. No video recorded by this check."
+}
