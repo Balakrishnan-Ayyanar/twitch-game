@@ -1,10 +1,10 @@
 # Local demo project — draft, not submission-ready
 
-1920×1080,30fps,5100frames (**170seconds**), seven chapters matching `submission/DEMO_SCRIPT.md`. JavaScript/React source only. Exact pins: **remotion + @remotion/cli4.0.540**, **react + react-dom19.3.1**. No fonts, music, remote assets or additional packages. Native system font and code-native evidence cards only. Node runtime supplied by coordinator:24.22.2; npm11.19.1. No npm install/provider call/render occurred in this coding turn.
+1920×1080,30fps,5100frames (**170seconds**), seven chapters matching `submission/DEMO_SCRIPT.md`. JavaScript/React source only. Exact pins: **remotion + @remotion/cli4.0.540**, **react + react-dom19.3.1**. No fonts, music, remote assets or additional packages. Native system font and code-native evidence cards only. Node runtime supplied by coordinator:24.22.2; npm11.19.1. Coordinator installed the official temporary runtime/pinned npm dependencies, generated the approved narration, and completed the170-second watermarked Draft render. This docs-only turn performs none of those operations.
 
 ## Coordinator install / local preview / render
 
-Coordinator completed the pinned official-npm install with lifecycle scripts disabled; `package-lock.json` now exists and is in the explicit source manifest. The supplied runtime is `/tmp/chat-mission-video-runtime/node-v24.22.2-darwin-arm64/bin` on PATH. Run from `video/`. Review exact dependency resolutions and generated **package-lock.json** before committing; all installed Remotion packages must match4.0.540. Lockfile/source staging review remains coordinator-owned. Do not let npm pick `latest` or add dependencies. Package install/browser provisioning is coordinator work; if the renderer needs a browser, stop for coordinator review rather than silently adding a package or changing permissions.
+Coordinator completed the pinned official-npm install with lifecycle scripts disabled; `package-lock.json` now exists and is in the explicit source manifest. The supplied runtime is `/tmp/chat-mission-video-runtime/node-v24.22.2-darwin-arm64/bin` on PATH. Run from `video/`. Coordinator published the reviewed44-file source at https://github.com/Balakrishnan-Ayyanar/twitch-game, initial source publication `56a11bc12c2257076341f7266f22d838634293c5`. All Remotion pins remain4.0.540. Do not let npm pick `latest` or add dependencies. Package install/browser provisioning is coordinator work; if the renderer needs a browser, stop for coordinator review rather than silently adding a package or changing permissions.
 
 After coordinator review of the installed dependencies:
 
@@ -15,7 +15,7 @@ npm run studio
 npm run render:draft
 ```
 
-Use only the Draft composition for the preview. `out/draft.mp4` carries a persistent **DRAFT · GENUINE FOOTAGE PENDING** watermark and explicit missing-footage cards. Narration does not turn this into real footage. Result cards describe the curated live observation; they do not recreate chat/gameplay. No actual render is verified until coordinator runs it.
+Use only the Draft composition for the preview. `out/draft.mp4` carries a persistent **DRAFT · GENUINE FOOTAGE PENDING** watermark and explicit missing-footage cards. Narration does not turn this into real footage. Result cards describe the curated live observation; they do not recreate chat/gameplay. Completed local `video/out/draft.mp4`: **170.0seconds,1920×1080,video+audio tracks,11,223,210bytes**; SHA256 `046cbe175468973aa163987795c7d88d77be066671fc50fdbf9e9df4c5116596`. It is a narrated **WATERMARKED DRAFT with missing-footage cards**, not submission-ready or recorded gameplay. Genuine clips remain missing.
 
 ## ElevenLabs — intentional operator operations only
 
@@ -30,13 +30,11 @@ From the workspace root, using the operator's ordinary interactive shell where t
 
 Dry-run/default never reads the key or accesses the network. Inspect intentionally reads only `ELEVENLABS_API_KEY` from that process environment; prints offered safe model/voice IDs and allowlisted usage counters, not the key or raw catalog. No shell files are read by the helper. Do not print/dump env, paste the key, pass it as an argument, source shell files through Codex or expose it to a browser/video. Current executor key absence must not be worked around by reading private files.
 
-Coordinator privately inspected the provider: `eleven_multilingual_v2` is offered and21premade voices are available. No narration has been generated. After coordinator reviews the polished script, selects an offered **existing premade voice licensed for this use**, and confirms the offered model, run once (replace only the public voice ID):
+Coordinator privately inspected the provider, then completed **one approved generation** with an offered premade voice and `eleven_multilingual_v2`:2084characters,139.363265seconds,2,230,273bytes. Audio is the ignored local `public/media/narration.mp3`; the key was never printed/stored. Immediate account character_count71550 before/after may lag and is **not a zero-charge claim**. Narration is ready; this render/status update required no additional API call. Do not regenerate merely to repeat this completed step.
 
-```sh
-.venv/bin/python tools/elevenlabs_narration.py --generate --approve-generation --voice-id REVIEWED_VOICE_ID --model-id eleven_multilingual_v2
-```
+HTTPS is restricted to `api.elevenlabs.io`, verified TLS, no redirects, no automatic POST retries or reflected provider errors. Generation performs catalog/subscription GETs, **one POST**, then an optional usage GET. Files are ignored `public/media/narration.mp3` and `narration-receipt.json`; receipt includes requested characters and before/after account character_count/delta if available, not a billing guarantee. Existing outputs are refused before provider access. On an uncertain POST failure, stop and check account usage manually; do not blindly repeat. The approved narration is already generated; provider instructions above describe intentional operations, not pending work.
 
-HTTPS is restricted to `api.elevenlabs.io`, verified TLS, no redirects, no automatic POST retries or reflected provider errors. Generation performs catalog/subscription GETs, **one POST**, then an optional usage GET. Files are ignored `public/media/narration.mp3` and `narration-receipt.json`; receipt includes requested characters and before/after account character_count/delta if available, not a billing guarantee. Existing outputs are refused before provider access. On an uncertain POST failure, stop and check account usage manually; do not blindly repeat. No narration has been generated yet.
+Latest coordinator checks: **112 Python tests plus8Node tests passed, no skips; source credential scans0**. Coordinator will rebuild SourceZIP after the final documentation commit; no current archive is claimed verified against these updated docs. No tests, providers or git operations here.
 
 ## Final composition — reviewed genuine clips required
 
